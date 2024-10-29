@@ -11,10 +11,8 @@ import 'model/application_event.dart';
 /// Plugin to list applications installed on an Android device
 /// iOS is not supported
 class DeviceApps {
-  static const MethodChannel _methodChannel =
-      MethodChannel('g123k/device_apps');
-  static const EventChannel _eventChannel =
-      EventChannel('g123k/device_apps_events');
+  static const MethodChannel _methodChannel = MethodChannel('g123k/device_apps');
+  static const EventChannel _eventChannel = EventChannel('g123k/device_apps_events');
 
   /// List installed applications on the device
   /// [includeSystemApps] will also include system apps (or pre-installed) like
@@ -30,12 +28,8 @@ class DeviceApps {
     bool onlyAppsWithLaunchIntent: false,
   }) async {
     try {
-      final Object apps =
-          await _methodChannel.invokeMethod('getInstalledApps', <String, bool>{
-        'system_apps': includeSystemApps,
-        'include_app_icons': includeAppIcons,
-        'only_apps_with_launch_intent': onlyAppsWithLaunchIntent
-      });
+      final Object apps = await _methodChannel.invokeMethod('getInstalledApps',
+          <String, bool>{'system_apps': includeSystemApps, 'include_app_icons': includeAppIcons, 'only_apps_with_launch_intent': onlyAppsWithLaunchIntent});
 
       if (apps is Iterable) {
         List<Application> list = <Application>[];
@@ -65,7 +59,7 @@ class DeviceApps {
   /// Provide all information for a given app by its [packageName]
   /// [includeAppIcon] will also include the icon for the app.
   /// To get it, you have to cast the object to [ApplicationWithIcon].
-  static Future<Application?> getApp(
+  static Future<Application> getApp(
     String packageName, [
     bool includeAppIcon = false,
   ]) async {
@@ -73,11 +67,7 @@ class DeviceApps {
       throw Exception('The package name can not be empty');
     }
     try {
-      final Object? app = await _methodChannel.invokeMethod(
-          'getApp', <String, Object>{
-        'package_name': packageName,
-        'include_app_icon': includeAppIcon
-      });
+      final Object app = await _methodChannel.invokeMethod('getApp', <String, Object>{'package_name': packageName, 'include_app_icon': includeAppIcon});
 
       if (app != null && app is Map<dynamic, dynamic>) {
         return Application._(app);
@@ -104,7 +94,7 @@ class DeviceApps {
             'package_name': packageName,
           },
         )
-        .then((bool? value) => value ?? false)
+        .then((bool value) => value ?? false)
         .catchError((dynamic err) => false);
   }
 
@@ -124,7 +114,7 @@ class DeviceApps {
             'package_name': packageName,
           },
         )
-        .then((bool? value) => value ?? false)
+        .then((bool value) => value ?? false)
         .catchError((dynamic err) => false);
   }
 
@@ -140,7 +130,7 @@ class DeviceApps {
         .invokeMethod<bool>('openAppSettings', <String, String>{
           'package_name': packageName,
         })
-        .then((bool? value) => value ?? false)
+        .then((bool value) => value ?? false)
         .catchError((dynamic err) => false);
   }
 
@@ -155,7 +145,7 @@ class DeviceApps {
         .invokeMethod<bool>('uninstallApp', <String, String>{
           'package_name': packageName,
         })
-        .then((bool? value) => value ?? false)
+        .then((bool value) => value ?? false)
         .catchError((dynamic err) => false);
   }
 
@@ -165,8 +155,7 @@ class DeviceApps {
   static Stream<ApplicationEvent> listenToAppsChanges() {
     return _eventChannel
         .receiveBroadcastStream()
-        .map(((dynamic event) =>
-            ApplicationEvent._(event as Map<dynamic, dynamic>)))
+        .map(((dynamic event) => ApplicationEvent._(event as Map<dynamic, dynamic>)))
         .handleError((Object err) => null);
   }
 }
@@ -176,8 +165,7 @@ class _BaseApplication {
   /// Name of the package
   final String packageName;
 
-  _BaseApplication._fromMap(Map<dynamic, dynamic> map)
-      : packageName = map['package_name'] as String;
+  _BaseApplication._fromMap(Map<dynamic, dynamic> map) : packageName = map['package_name'] as String;
 }
 
 /// An application installed on the device
@@ -192,14 +180,14 @@ class Application extends _BaseApplication {
   /// Public name of the application (eg: 1.0.0)
   /// The version name of this package, as specified by the <manifest> tag's
   /// `versionName` attribute
-  final String? versionName;
+  final String versionName;
 
   /// Unique version id for the application
   final int versionCode;
 
   /// Full path to the default directory assigned to the package for its
   /// persistent data
-  final String? dataDir;
+  final String dataDir;
 
   /// Whether the application is installed in the device's system image
   /// An application downloaded by the user won't be a system app
@@ -233,7 +221,7 @@ class Application extends _BaseApplication {
   Application._fromMap(Map<dynamic, dynamic> map)
       : appName = map['app_name'] as String,
         apkFilePath = map['apk_file_path'] as String,
-        versionName = map['version_name'] as String?,
+        versionName = map['version_name'] as String,
         versionCode = map['version_code'] as int,
         dataDir = map['data_dir'] as String,
         systemApp = map['system_app'] as bool,
@@ -246,7 +234,7 @@ class Application extends _BaseApplication {
   /// Mapping of Android categories
   /// [https://developer.android.com/reference/kotlin/android/content/pm/ApplicationInfo]
   /// [category] is null on Android < 26
-  static ApplicationCategory _parseCategory(Object? category) {
+  static ApplicationCategory _parseCategory(Object category) {
     if (category is num && category < 0) {
       return ApplicationCategory.undefined;
     } else if (category == 0) {
@@ -359,11 +347,7 @@ class ApplicationWithIcon extends Application {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is ApplicationWithIcon &&
-          runtimeType == other.runtimeType &&
-          _icon == other._icon;
+      identical(this, other) || super == other && other is ApplicationWithIcon && runtimeType == other.runtimeType && _icon == other._icon;
 
   @override
   int get hashCode => super.hashCode ^ _icon.hashCode;
@@ -382,7 +366,7 @@ abstract class ApplicationEvent {
   final DateTime time;
 
   factory ApplicationEvent._(Map<dynamic, dynamic> map) {
-    Object? eventType = map['event_type'];
+    Object eventType = map['event_type'];
 
     if (eventType is! String) {
       throw Exception('Event type \"$eventType\" can not be empty!');
@@ -419,11 +403,7 @@ abstract class ApplicationEvent {
   }
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ApplicationEvent &&
-          runtimeType == other.runtimeType &&
-          event == other.event;
+  bool operator ==(Object other) => identical(this, other) || other is ApplicationEvent && runtimeType == other.runtimeType && event == other.event;
 
   @override
   int get hashCode => event.hashCode;
@@ -444,11 +424,7 @@ class ApplicationEventInstalled extends ApplicationEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is ApplicationEventInstalled &&
-          runtimeType == other.runtimeType &&
-          application == other.application;
+      identical(this, other) || super == other && other is ApplicationEventInstalled && runtimeType == other.runtimeType && application == other.application;
 
   @override
   int get hashCode => super.hashCode ^ application.hashCode;
@@ -474,11 +450,7 @@ class ApplicationEventUpdated extends ApplicationEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is ApplicationEventInstalled &&
-          runtimeType == other.runtimeType &&
-          application == other.application;
+      identical(this, other) || super == other && other is ApplicationEventInstalled && runtimeType == other.runtimeType && application == other.application;
 
   @override
   int get hashCode => super.hashCode ^ application.hashCode;
@@ -504,11 +476,7 @@ class ApplicationEventUninstalled extends ApplicationEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is ApplicationEventInstalled &&
-          runtimeType == other.runtimeType &&
-          _application == other.application;
+      identical(this, other) || super == other && other is ApplicationEventInstalled && runtimeType == other.runtimeType && _application == other.application;
 
   @override
   int get hashCode => super.hashCode ^ _application.hashCode;
@@ -534,11 +502,7 @@ class ApplicationEventEnabled extends ApplicationEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is ApplicationEventInstalled &&
-          runtimeType == other.runtimeType &&
-          application == other.application;
+      identical(this, other) || super == other && other is ApplicationEventInstalled && runtimeType == other.runtimeType && application == other.application;
 
   @override
   int get hashCode => super.hashCode ^ application.hashCode;
@@ -564,11 +528,7 @@ class ApplicationEventDisabled extends ApplicationEvent {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      super == other &&
-          other is ApplicationEventInstalled &&
-          runtimeType == other.runtimeType &&
-          application == other.application;
+      identical(this, other) || super == other && other is ApplicationEventInstalled && runtimeType == other.runtimeType && application == other.application;
 
   @override
   int get hashCode => super.hashCode ^ application.hashCode;
